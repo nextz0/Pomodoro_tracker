@@ -4,7 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/nedpals/supabase-go"
 )
+
+const supabaseUrl = "https://ixreecjqnzroibwvuzxx.supabase.co"
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4cmVlY2pxbnpyb2lid3Z1enh4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU0MzQ3NjAsImV4cCI6MjA4MTAxMDc2MH0.8_ULIKMHEOoOdNi_pNcHcg_rYEIqaKofAtuUA61lSJg"
 
 type TimerLog struct {
 	Duration int    `json:"duration"`
@@ -30,8 +35,18 @@ func saveSessionHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// (ในอนาคต) บันทึกลง Database ตรงนี้
-		fmt.Printf("บันทึกเซสชัน: %d วินาที สถานะ: %s\n", log.Duration, log.Status)
+		client := supabase.CreateClient(supabaseUrl, supabaseKey)
+
+		var results []TimerLog
+		err = client.DB.From("sessions").Insert(log).Execute(&results)
+
+		if err != nil {
+			fmt.Println("Error inserting to Supabase:", err)
+			http.Error(w, "Failed to save to database", http.StatusInternalServerError)
+			return
+		}
+
+		fmt.Printf("Saved to Supabase: %+v\n", results)
 
 		// ตอบกลับ Frontend
 		w.Header().Set("Content-Type", "application/json")
