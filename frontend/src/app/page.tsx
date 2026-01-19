@@ -1,13 +1,27 @@
-// src/app/page.tsx
-"use client"; // จำเป็นต้องใส่เพราะมีการใช้ State
+"use client"; 
 
 import { useState, useEffect } from "react";
-import { Play, Pause, RotateCcw } from "lucide-react"; // ไอคอนที่มีอยู่แล้วในโปรเจกต์
+import { Play, Pause, RotateCcw, Brain, Coffee, Armchair } from "lucide-react"; 
+
+const TIME_MODES = {
+  focus: { label: "Focus", minutes: 25, icon: Brain },
+  short: { label: "Short Break", minutes: 5, icon: Coffee },
+  long: { label: "Long Break", minutes: 15, icon: Armchair },
+}
+
+type ModeKey = keyof typeof TIME_MODES;
 
 export default function Home() {
-  // สถานะเวลา (25 นาที = 1500 วินาที)
-  const [timeLeft, setTimeLeft] = useState(5);
+  // state สำหรับเก็บโหมดปัจจุบัน (เริ่มต้นที่ focus)
+  const [currentMode, setCurrentMode] = useState<ModeKey>("focus");
+  const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isActive, setIsActive] = useState(false);
+
+  const handleModeChange = (mode: ModeKey) => {
+    setCurrentMode(mode);
+    setIsActive(false); // หยุดเวลาก่อน
+    setTimeLeft(TIME_MODES[mode].minutes * 60); // รีเซ็ตเวลาใหม่
+  };
 
   // ฟังก์ชันยิง API ไปหา Go Backend
   const saveToBackend = async () => {
@@ -59,7 +73,7 @@ export default function Home() {
   const toggleTimer = () => setIsActive(!isActive);
   const resetTimer = () => {
     setIsActive(false);
-    setTimeLeft(25 * 60);
+    setTimeLeft(TIME_MODES[currentMode].minutes * 60);
   };
 
   return (
